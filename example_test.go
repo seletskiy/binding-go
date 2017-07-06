@@ -7,7 +7,7 @@ import (
 	"github.com/seletskiy/binding-go"
 )
 
-func Example_SimpleBinding() {
+func Example_simpleBinding() {
 	var user struct {
 		Age int
 	}
@@ -27,7 +27,7 @@ func Example_SimpleBinding() {
 	// Age: 27
 }
 
-func Example_CustomFieldName() {
+func Example_customFieldName() {
 	var user struct {
 		Age int `form:"how_old"`
 	}
@@ -47,7 +47,7 @@ func Example_CustomFieldName() {
 	// Age: 27
 }
 
-func Example_CustomBindingFunction() {
+func Example_customBindingFunction() {
 	var contract struct {
 		Duration time.Duration `binding:"duration"`
 	}
@@ -66,7 +66,7 @@ func Example_CustomBindingFunction() {
 	// Duration: 1h23m45s
 }
 
-func Example_PerFieldErrors() {
+func Example_perFieldErrors() {
 	var user struct {
 		Age    int
 		Name   string `required:"true"`
