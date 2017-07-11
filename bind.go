@@ -12,6 +12,10 @@ import (
 	"strings"
 )
 
+// FieldNameFunc represents function that retrieves field name by given
+// reflect type of field.
+type FieldNameFunc func(field reflect.StructField) string
+
 // MapFunc is a signature for function that maps field name into raw
 // representation. Only string return values are supported for now.
 type MapFunc func(name string) interface{}
@@ -50,8 +54,13 @@ type MapFunc func(name string) interface{}
 // `yaml` and `toml` tags if `form` tag is not specified. If no known tags
 // specify mapped name, then field's name will be used.
 //
-// To customize binding functions, third argument can be used to pass functions
-// in the form of `Bindings{"<name>": <function>}`.
+// To customize binding behavior, third variable argument can be used:
+//
+// To specify binding functions, pass functions in the form of
+// `Bindings{"<name>": <function>}`.
+//
+// To specify function that maps field to it's name, specify it as
+// `FieldNameFunc(<func>)`.
 func Bind(output interface{}, mapper MapFunc, options ...interface{}) error {
 	var bindings = Bindings{
 		"int":    bindInt,
@@ -59,12 +68,16 @@ func Bind(output interface{}, mapper MapFunc, options ...interface{}) error {
 		"string": bindString,
 	}
 
+	var fieldNameFunc = getFieldName
+
 	for _, option := range options {
 		switch option := option.(type) {
 		case Bindings:
 			for key, binding := range option {
 				bindings[key] = binding
 			}
+		case FieldNameFunc:
+			fieldNameFunc = option
 		}
 	}
 
@@ -95,8 +108,12 @@ func Bind(output interface{}, mapper MapFunc, options ...interface{}) error {
 	for i := 0; i < structType.NumField(); i++ {
 		var (
 			field = structType.Field(i)
-			name  = getFieldName(field)
+			name  = fieldNameFunc(field)
 		)
+
+		if name == "" {
+			continue
+		}
 
 		if binding, ok := getBinding(field, bindings); !ok {
 			return InvalidBindingError(

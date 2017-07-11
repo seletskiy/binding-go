@@ -3,6 +3,7 @@ package binding
 import (
 	"fmt"
 	"math"
+	"reflect"
 	"testing"
 	"time"
 
@@ -163,4 +164,23 @@ func TestBind_CanUseCustomBindFunc(t *testing.T) {
 
 	test.NoError(err)
 	test.Equal("1h30m0s", contract.ExpiresIn.String())
+}
+
+func TestBin_CanUseCustomFieldNameFunc(t *testing.T) {
+	test := assert.New(t)
+
+	var user struct {
+		Name string
+		Age  int `name:"age"`
+	}
+
+	err := Bind(&user, func(key string) interface{} {
+		return "27"
+	}, FieldNameFunc(func(field reflect.StructField) string {
+		return field.Tag.Get("name")
+	}))
+
+	test.NoError(err)
+	test.Empty(user.Name)
+	test.Equal(27, user.Age)
 }
